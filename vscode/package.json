@@ -5,36 +5,122 @@
   "publisher": "local",
   "version": "0.0.1",
   "license": "MIT",
-  "engines": { "vscode": "^1.85.0" },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
   "main": "./extension.js",
-  "files": ["extension.js"],
-  "activationEvents": ["onStartupFinished"],
+  "files": [
+    "extension.js"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "commands": [
-      { "command": "agentDiff.prev", "title": "Previous Changed File", "category": "Agent Diff", "icon": "$(arrow-left)" },
-      { "command": "agentDiff.next", "title": "Next Changed File", "category": "Agent Diff", "icon": "$(arrow-right)" },
-      { "command": "agentDiff.dismiss", "title": "Dismiss This File", "category": "Agent Diff", "icon": "$(check)" },
-      { "command": "agentDiff.dismissAll", "title": "Dismiss All Files", "category": "Agent Diff", "icon": "$(check-all)" }
+      {
+        "command": "agentDiff.prev",
+        "title": "Previous Changed File",
+        "category": "Agent Diff",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "agentDiff.next",
+        "title": "Next Changed File",
+        "category": "Agent Diff",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "agentDiff.dismiss",
+        "title": "Dismiss This File",
+        "category": "Agent Diff",
+        "icon": "$(check)"
+      },
+      {
+        "command": "agentDiff.dismissAll",
+        "title": "Dismiss All Files",
+        "category": "Agent Diff",
+        "icon": "$(check-all)"
+      }
     ],
     "menus": {
       "editor/title": [
-        { "command": "agentDiff.prev", "when": "agentDiff.active && isInDiffEditor", "group": "navigation@91" },
-        { "command": "agentDiff.next", "when": "agentDiff.active && isInDiffEditor", "group": "navigation@92" },
-        { "command": "agentDiff.dismiss", "when": "agentDiff.active && isInDiffEditor", "group": "navigation@93" },
-        { "command": "agentDiff.dismissAll", "when": "agentDiff.active && isInDiffEditor", "group": "navigation@94" }
+        {
+          "command": "agentDiff.prev",
+          "when": "agentDiff.inTab",
+          "group": "navigation@91"
+        },
+        {
+          "command": "agentDiff.next",
+          "when": "agentDiff.inTab",
+          "group": "navigation@92"
+        },
+        {
+          "command": "agentDiff.dismiss",
+          "when": "agentDiff.inTab",
+          "group": "navigation@93"
+        },
+        {
+          "command": "agentDiff.dismissAll",
+          "when": "agentDiff.inTab",
+          "group": "navigation@94"
+        }
       ],
       "commandPalette": [
-        { "command": "agentDiff.prev", "when": "agentDiff.active" },
-        { "command": "agentDiff.next", "when": "agentDiff.active" },
-        { "command": "agentDiff.dismiss", "when": "agentDiff.active" },
-        { "command": "agentDiff.dismissAll", "when": "agentDiff.active" }
+        {
+          "command": "agentDiff.prev",
+          "when": "agentDiff.active"
+        },
+        {
+          "command": "agentDiff.next",
+          "when": "agentDiff.active"
+        },
+        {
+          "command": "agentDiff.dismiss",
+          "when": "agentDiff.active"
+        },
+        {
+          "command": "agentDiff.dismissAll",
+          "when": "agentDiff.active"
+        }
       ]
     },
     "keybindings": [
-      { "command": "agentDiff.prev", "key": "ctrl+alt+p", "when": "agentDiff.active" },
-      { "command": "agentDiff.next", "key": "ctrl+alt+n", "when": "agentDiff.active" },
-      { "command": "agentDiff.dismiss", "key": "ctrl+alt+d", "when": "agentDiff.active" },
-      { "command": "agentDiff.dismissAll", "key": "ctrl+alt+shift+d", "when": "agentDiff.active" }
+      {
+        "command": "workbench.action.compareEditor.previousChange",
+        "key": "ctrl+alt+up",
+        "mac": "cmd+alt+up",
+        "when": "agentDiff.inTab"
+      },
+      {
+        "command": "workbench.action.compareEditor.nextChange",
+        "key": "ctrl+alt+down",
+        "mac": "cmd+alt+down",
+        "when": "agentDiff.inTab"
+      },
+      {
+        "command": "agentDiff.prev",
+        "key": "ctrl+alt+left",
+        "mac": "cmd+alt+left",
+        "when": "agentDiff.inTab"
+      },
+      {
+        "command": "agentDiff.next",
+        "key": "ctrl+alt+right",
+        "mac": "cmd+alt+right",
+        "when": "agentDiff.inTab"
+      },
+      {
+        "command": "agentDiff.dismiss",
+        "key": "ctrl+alt+backspace",
+        "mac": "cmd+alt+backspace",
+        "when": "agentDiff.inTab"
+      },
+      {
+        "command": "agentDiff.dismissAll",
+        "key": "ctrl+alt+shift+backspace",
+        "mac": "cmd+alt+shift+backspace",
+        "when": "agentDiff.inTab"
+      }
     ]
   }
 }

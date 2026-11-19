@@ -19,13 +19,16 @@ You can run it again. It does not add the hooks twice. Reload your VS Code windo
 
 ## Use
 
-| Action | Button | Key |
-|---|---|---|
-| Previous file | ← | `ctrl+alt+p` |
-| Next file | → | `ctrl+alt+n` |
-| Dismiss this file | ✓ | `ctrl+alt+d` |
-| Dismiss all files | ✓✓ | `ctrl+alt+shift+d` |
-| Next / previous change in the file | VS Code built-in ↓ ↑ | `alt+f5` / `shift+alt+f5` |
+These keys work only in an agent diff tab. Other tabs keep the normal VS Code keys.
+
+| Action | Button | Key (macOS) | Key (Linux, Windows) |
+|---|---|---|---|
+| Previous / next change in the file | VS Code built-in ↑ ↓ | `cmd+alt+up` / `cmd+alt+down` | `ctrl+alt+up` / `ctrl+alt+down` |
+| Previous / next file | ← → | `cmd+alt+left` / `cmd+alt+right` | `ctrl+alt+left` / `ctrl+alt+right` |
+| Dismiss this file | ✓ | `cmd+alt+backspace` | `ctrl+alt+backspace` |
+| Dismiss all files | ✓✓ | `cmd+alt+shift+backspace` | `ctrl+alt+shift+backspace` |
+
+Dismiss closes the tab and removes the file from the review. The change of the agent stays in the file.
 
 The commands are also in the command palette under "Agent Diff". Use the keys in Zen mode if the editor title bar is hidden.
 

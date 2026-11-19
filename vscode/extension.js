@@ -136,6 +136,13 @@ async function finish() {
   await Promise.resolve(vscode.commands.executeCommand('setContext', 'agentDiff.active', false)).catch(() => {});
 }
 
+// agentDiff.inTab limits the keys and buttons to agent diff tabs, so other diffs keep the VS Code keys.
+function syncTab() {
+  const t = vscode.window.tabGroups.activeTabGroup.activeTab;
+  const ours = !!t && t.input instanceof vscode.TabInputTextDiff && t.input.original.scheme === SCHEME;
+  Promise.resolve(vscode.commands.executeCommand('setContext', 'agentDiff.inTab', ours)).catch(() => {});
+}
+
 function activate(context) {
   ctx = context;
   context.subscriptions.push(
@@ -144,6 +151,8 @@ function activate(context) {
     vscode.commands.registerCommand('agentDiff.prev', () => show(current() - 1)),
     vscode.commands.registerCommand('agentDiff.dismiss', dismiss),
     vscode.commands.registerCommand('agentDiff.dismissAll', dismissAll),
+    vscode.window.tabGroups.onDidChangeTabs(syncTab),
+    vscode.window.tabGroups.onDidChangeTabGroups(syncTab),
   );
   finish(); // put the setting back if VS Code quit during a review
   for (const f of vscode.workspace.workspaceFolders ?? []) watch(f.uri.fsPath);
