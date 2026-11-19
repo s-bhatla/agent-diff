@@ -125,12 +125,15 @@ async function start() {
   await cfg().update('renderSideBySide', false, vscode.ConfigurationTarget.Global);
 }
 
+// Restores the setting first: on window close, commands fail ("Channel has been closed").
+// The saved value is cleared only after the restore works, so the next start retries it.
 async function finish() {
-  await vscode.commands.executeCommand('setContext', 'agentDiff.active', false);
   const saved = ctx.globalState.get('saved');
-  if (!saved) return;
-  await ctx.globalState.update('saved', undefined);
-  await cfg().update('renderSideBySide', saved.v ?? undefined, vscode.ConfigurationTarget.Global);
+  if (saved) {
+    await cfg().update('renderSideBySide', saved.v ?? undefined, vscode.ConfigurationTarget.Global);
+    await ctx.globalState.update('saved', undefined);
+  }
+  await Promise.resolve(vscode.commands.executeCommand('setContext', 'agentDiff.active', false)).catch(() => {});
 }
 
 function activate(context) {
