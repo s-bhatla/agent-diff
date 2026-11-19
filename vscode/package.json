@@ -7,6 +7,7 @@
   "license": "MIT",
   "engines": { "vscode": "^1.85.0" },
   "main": "./extension.js",
+  "files": ["extension.js"],
   "activationEvents": ["onStartupFinished"],
   "contributes": {
     "commands": [

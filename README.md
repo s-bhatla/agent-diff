@@ -4,20 +4,18 @@ After each omp or Claude Code run, VS Code opens an inline diff for each file th
 
 ## Install
 
-1. Copy the script:
-   ```bash
-   install -m 755 bin/agent-diff ~/.local/bin/agent-diff
-   ```
-2. Install the VS Code extension:
-   ```bash
-   cd vscode && npx @vscode/vsce@3 package --skip-license --allow-missing-repository -o ../agent-diff.vsix && cd .. && code --install-extension agent-diff.vsix
-   ```
-3. For omp, copy the adapter:
-   ```bash
-   cp omp/agent-diff.ts ~/.omp/agent/extensions/
-   ```
-4. For Claude Code, merge `claude/hooks.json` into the `hooks` key of `~/.claude/settings.json`.
-5. Reload VS Code windows.
+```bash
+./install.sh
+```
+
+The script installs each part and skips a tool that you do not have:
+
+1. `bin/agent-diff` to `~/.local/bin/`
+2. The VS Code extension, packaged with `npx @vscode/vsce`
+3. `omp/agent-diff.ts` to `~/.omp/agent/extensions/`
+4. The hooks from `claude/hooks.json` into `~/.claude/settings.json`. The old file goes to `settings.json.bak`.
+
+You can run it again. It does not add the hooks twice. Reload your VS Code windows after you install.
 
 ## Use
 
