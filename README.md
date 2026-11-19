@@ -34,13 +34,14 @@ The commands are also in the command palette under "Agent Diff". Use the keys in
 - `agent-diff snapshot` runs before the agent. It records the work tree as a git tree object, through a private index.
 - `agent-diff done` runs after the agent. If the tree changed, it writes both tree hashes to `.git/agent-diff/review`.
 - Each VS Code window watches the git folder of its own workspace, so the review opens in the correct window.
+- If the folder is not a git repo, both sides use each git repo one level down. You can open `~/projects` in VS Code and run the agent there.
 
 It makes no commits, refs, stash entries or changes to your staged files. Git removes the unused tree objects with `git gc` after 2 weeks.
 
 ## Limits
 
-- It works only in git repos. It does not show changes to gitignored files.
-- A new run replaces the list of files that you did not review yet.
+- It works in a git repo, or in a folder with git repos one level down. Deeper repos are not found. It does not show changes to gitignored files.
+- A new run in a repo replaces the files of that repo that you did not review yet.
 - During a review, it sets `diffEditor.renderSideBySide` to `false`. "Dismiss all" puts back your old value.
 - Large untracked files that git does not ignore make each snapshot slower.
 
