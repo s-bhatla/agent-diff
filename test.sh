@@ -37,4 +37,20 @@ rm .git/agent-diff/review
 [ ! -e .git/agent-diff/review ] || fail "review written with no changes"
 
 "$bin" snapshot /tmp || fail "non-repo dir should exit 0"
+
+# A parent folder that holds repos: each changed repo gets its own review.
+p=$(mktemp -d) # outside $r, which is itself a repo
+trap 'rm -rf "$r" "$p"' EXIT
+mkdir -p "$p/plain"
+for n in one two three; do
+  git init -q "$p/$n" && echo a >"$p/$n/f"
+done
+"$bin" snapshot "$p"
+echo b >>"$p/one/f"
+echo b >>"$p/two/f"
+"$bin" done "$p"
+[ -s "$p/one/.git/agent-diff/review" ] || fail "parent: no review in one"
+[ -s "$p/two/.git/agent-diff/review" ] || fail "parent: no review in two"
+[ ! -e "$p/three/.git/agent-diff/review" ] || fail "parent: review in unchanged repo"
+[ ! -e "$p/plain/.git" ] || fail "parent: touched a non-repo folder"
 echo PASS
