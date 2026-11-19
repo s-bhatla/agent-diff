@@ -9,7 +9,7 @@ const SCHEME = 'agent-diff';
 const git = (cwd, args) => execFileSync('git', args, { cwd, maxBuffer: 1 << 30 });
 
 let ctx;
-let files = []; // { rel, left, right }
+let files = []; // { top, name, left, right }, from all watched repos
 let pos = 0;
 
 // Old side of each diff: file content from the snapshot tree, or empty.
@@ -23,12 +23,20 @@ function oldContent(uri) {
   }
 }
 
+// Watches dir if it is a repo, else each git repo one level down (same rule as bin/agent-diff).
 function watch(dir) {
+  if (watchRepo(dir)) return;
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (e.isDirectory() && fs.existsSync(path.join(dir, e.name, '.git'))) watchRepo(path.join(dir, e.name));
+  }
+}
+
+function watchRepo(dir) {
   let gd, top;
   try {
     [gd, top] = git(dir, ['rev-parse', '--absolute-git-dir', '--show-toplevel']).toString().trim().split('\n');
   } catch {
-    return; // not a git repo
+    return false; // not a git repo
   }
   const sig = path.join(gd, 'agent-diff');
   fs.mkdirSync(sig, { recursive: true }); // a watcher needs its folder to exist
@@ -37,9 +45,11 @@ function watch(dir) {
   w.onDidCreate(on);
   w.onDidChange(on);
   ctx.subscriptions.push(w);
+  return true;
 }
 
-// ponytail: a new run replaces the list, so files you did not review from the last run drop out.
+// A new run replaces the files of its own repo only.
+// ponytail: files you did not review from the last run of that repo drop out.
 async function open(top, reviewFile) {
   let base, cur;
   try {
@@ -50,25 +60,27 @@ async function open(top, reviewFile) {
   const out = git(top, ['diff', '--no-renames', '--name-status', '-z', base, cur]).toString().split('\0');
   const uri = (rel, tree) =>
     vscode.Uri.from({ scheme: SCHEME, path: '/' + rel, query: new URLSearchParams({ repo: top, tree, rel }).toString() });
-  files = [];
+  const added = [];
   for (let i = 0; i + 1 < out.length; i += 2) {
     const [status, rel] = [out[i], out[i + 1]];
-    files.push({
-      rel,
+    added.push({
+      top,
+      name: `${path.basename(top)}/${rel}`,
       left: status === 'A' ? uri(rel, '') : uri(rel, base),
       right: status === 'D' ? uri(rel, '') : vscode.Uri.file(path.join(top, rel)),
     });
   }
-  if (!files.length) return;
+  if (!added.length) return;
+  files = files.filter((f) => f.top !== top).concat(added);
   await start();
-  await show(0);
+  await show(files.length - added.length);
 }
 
 async function show(i) {
   if (!files.length) return finish();
   pos = (i + files.length) % files.length; // wrap around at both ends
   const f = files[pos];
-  await vscode.commands.executeCommand('vscode.diff', f.left, f.right, `${f.rel} (agent ${pos + 1}/${files.length})`, {
+  await vscode.commands.executeCommand('vscode.diff', f.left, f.right, `${f.name} (agent ${pos + 1}/${files.length})`, {
     preview: true, // reuse one tab
   });
 }
