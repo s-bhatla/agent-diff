@@ -1,0 +1,38 @@
+#!/bin/sh
+# agent-diff: record the work tree before an agent run, signal VS Code after.
+# Usage: agent-diff snapshot|done [dir]
+# Writes only inside .git/agent-diff. Makes no commits, refs or index changes.
+# Prints nothing on stdout: Claude Code adds hook stdout to the prompt.
+
+cd "${2:-.}" 2>/dev/null || exit 0
+out=$(git rev-parse --absolute-git-dir --show-toplevel 2>/dev/null) || exit 0 # not a repo
+gd=$(echo "$out" | sed -n 1p)
+top=$(echo "$out" | sed -n 2p)
+d="$gd/agent-diff"
+mkdir -p "$d"
+
+# Tree hash of the work tree: tracked + untracked, without ignored files.
+# A private index keeps the real index (your staged changes) untouched.
+tree() {
+  cp "$gd/index" "$d/index" 2>/dev/null || rm -f "$d/index" # reuse stat cache
+  cd "$top" &&
+    GIT_INDEX_FILE="$d/index" git add -A 2>/dev/null &&
+    GIT_INDEX_FILE="$d/index" git write-tree
+}
+
+case "$1" in
+snapshot)
+  tree >"$d/base.tmp" && mv "$d/base.tmp" "$d/base"
+  ;;
+done)
+  [ -s "$d/base" ] || exit 0
+  base=$(cat "$d/base")
+  cur=$(tree) || exit 0
+  [ "$base" = "$cur" ] && exit 0 # no changes: no review
+  echo "$base $cur" >"$d/review.tmp" && mv "$d/review.tmp" "$d/review"
+  ;;
+*)
+  echo "usage: agent-diff snapshot|done [dir]" >&2
+  exit 2
+  ;;
+esac
