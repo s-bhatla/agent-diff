@@ -45,16 +45,6 @@
         "command": "agentDiff.toggleMode",
         "title": "Switch Review / Edit Mode",
         "category": "Agent Diff"
-      },
-      {
-        "command": "agentDiff.review",
-        "title": "Review Mode",
-        "category": "Agent Diff"
-      },
-      {
-        "command": "agentDiff.edit",
-        "title": "Edit Mode",
-        "category": "Agent Diff"
       }
     ],
     "menus": {
@@ -100,14 +90,6 @@
         {
           "command": "agentDiff.toggleMode",
           "when": "agentDiff.inTab"
-        },
-        {
-          "command": "agentDiff.review",
-          "when": "agentDiff.inTab && !agentDiff.review"
-        },
-        {
-          "command": "agentDiff.edit",
-          "when": "agentDiff.inTab && agentDiff.review"
         }
       ]
     },
@@ -157,42 +139,32 @@
       {
         "command": "workbench.action.compareEditor.previousChange",
         "key": "up",
-        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus && neovim.mode != insert"
       },
       {
         "command": "workbench.action.compareEditor.nextChange",
         "key": "down",
-        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus && neovim.mode != insert"
       },
       {
         "command": "agentDiff.prev",
         "key": "left",
-        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus && neovim.mode != insert"
       },
       {
         "command": "agentDiff.next",
         "key": "right",
-        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus && neovim.mode != insert"
       },
       {
         "command": "agentDiff.dismiss",
         "key": "backspace",
-        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus && neovim.mode != insert"
       },
       {
         "command": "agentDiff.dismissAll",
         "key": "shift+backspace",
-        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
-      },
-      {
-        "command": "agentDiff.edit",
-        "key": "enter",
-        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
-      },
-      {
-        "command": "agentDiff.review",
-        "key": "escape",
-        "when": "agentDiff.inTab && !agentDiff.review && editorTextFocus && !suggestWidgetVisible && !findWidgetVisible && !hasMultipleSelections && !inSnippetMode && !parameterHintsVisible && !inlineSuggestionVisible"
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus && neovim.mode != insert"
       }
     ]
   }

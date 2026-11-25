@@ -12,8 +12,9 @@ The script installs each part and skips a tool that you do not have:
 
 1. `bin/agent-diff` to `~/.local/bin/`
 2. The VS Code extension, packaged with `npx @vscode/vsce`
-3. `omp/agent-diff.ts` to `~/.omp/agent/extensions/`
-4. The hooks from `claude/hooks.json` into `~/.claude/settings.json`. The old file goes to `settings.json.bak`.
+3. `nvim/agent-diff.lua` to `~/.config/nvim/plugin/`, for the [vscode-neovim](https://github.com/vscode-neovim/vscode-neovim) extension. Neovim outside VS Code does not use it.
+4. `omp/agent-diff.ts` to `~/.omp/agent/extensions/`
+5. The hooks from `claude/hooks.json` into `~/.claude/settings.json`. The old file goes to `settings.json.bak`.
 
 You can run it again. It does not add the hooks twice. Reload your VS Code windows after you install.
 
@@ -23,14 +24,15 @@ These keys and buttons work only in an agent diff tab. Other tabs keep the norma
 
 An agent diff tab has two modes:
 
-- **Review**: each file opens in this mode. The plain keys in the table move through the changes and files.
+- **Review**: each agent run starts in this mode. The plain keys in the table move through the changes and files.
 - **Edit**: the editor works as usual. Only the `cmd+alt` keys work.
 
-A click in the file, Enter, or typing switches to edit mode. Esc switches back to review mode.
-To switch either way, press `cmd+alt+enter` (`ctrl+alt+enter`), or click the Review / Edit button in the status bar.
+To switch the mode, press `cmd+alt+enter` (`ctrl+alt+enter`), or click the Review / Edit button in the status bar. Nothing else switches it.
+
+With vscode-neovim, the plain keys work in normal mode. Neovim gets these keys before VS Code does, so `nvim/agent-diff.lua` maps them in Neovim. Outside an agent diff tab, and in edit mode, each key keeps its old mapping.
 
 A notification at the bottom right shows the keys for the current mode. Click a key in it to run that action.
-Esc in review mode or "Cancel" hides the notification. The next mode switch or file shows it again.
+Esc or "Cancel" hides the notification. The next mode switch or agent diff tab shows it again.
 
 | Action | Title bar button | Review mode | Edit mode (macOS) | Edit mode (Linux, Windows) |
 |---|---|---|---|---|

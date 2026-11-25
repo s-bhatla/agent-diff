@@ -73,6 +73,7 @@ async function open(top, reviewFile) {
   if (!added.length) return;
   files = files.filter((f) => f.top !== top).concat(added);
   await start();
+  setMode(true); // each run starts in review mode
   await show(files.length - added.length);
 }
 
@@ -80,7 +81,6 @@ async function show(i) {
   if (!files.length) return finish();
   pos = (i + files.length) % files.length; // wrap around at both ends
   const f = files[pos];
-  setMode(true); // each file opens in review mode
   await vscode.commands.executeCommand('vscode.diff', f.left, f.right, `${f.name} (agent ${pos + 1}/${files.length})`, {
     preview: true, // reuse one tab
   });
@@ -138,7 +138,7 @@ async function finish() {
 }
 
 // Review mode: the plain keys in package.json review the diff. Edit mode: the editor works as usual.
-// A click or typing in the file switches to edit mode.
+// Only agentDiff.toggleMode switches the mode.
 let review = true;
 let ours = false; // the active tab is an agent diff
 let keys = []; // contributes.keybindings of package.json
@@ -146,14 +146,10 @@ let modeItem;
 
 const isOurs = (t) => !!t && t.input instanceof vscode.TabInputTextDiff && t.input.original.scheme === SCHEME;
 const activeTab = () => vscode.window.tabGroups.activeTabGroup.activeTab;
-const inOurFile = (doc) => {
-  const t = activeTab();
-  return isOurs(t) && t.input.modified.toString() === doc.uri.toString();
-};
 
 // "cmd+alt+left" -> "⌥⌘←" on macOS, "ctrl+alt+left" -> "Ctrl+Alt+Left" elsewhere, in the VS Code modifier order.
 const MODS = ['ctrl', 'shift', 'alt', 'cmd'];
-const MAC = { ctrl: '⌃', shift: '⇧', alt: '⌥', cmd: '⌘', up: '↑', down: '↓', left: '←', right: '→', backspace: '⌫', enter: '⏎', escape: 'Esc' };
+const MAC = { ctrl: '⌃', shift: '⇧', alt: '⌥', cmd: '⌘', up: '↑', down: '↓', left: '←', right: '→', backspace: '⌫', enter: '⏎' };
 function keyLabel(kb) {
   const mac = process.platform === 'darwin';
   const rank = (p) => (MODS.includes(p) ? MODS.indexOf(p) : MODS.length);
@@ -162,8 +158,11 @@ function keyLabel(kb) {
 }
 
 // The key of a command in review mode (the bindings that need agentDiff.review) or in edit mode (the others).
+// A command with no key for review mode, like the toggle, shows its other key.
 function keyOf(command, rev) {
-  const kb = keys.find((k) => k.command === command && /(^|[^!])agentDiff\.review\b/.test(k.when) === rev);
+  const reviewOnly = (k) => /(^|[^!])agentDiff\.review\b/.test(k.when);
+  const kb =
+    keys.find((k) => k.command === command && reviewOnly(k) === rev) ?? keys.find((k) => k.command === command && !reviewOnly(k));
   return kb ? keyLabel(kb) : '';
 }
 
@@ -173,7 +172,7 @@ const LEGEND = [
   [['agentDiff.dismiss'], 'dismiss'],
   [['agentDiff.dismissAll'], 'all'],
 ];
-const MODE_LEGEND = { true: [['agentDiff.edit'], 'edit'], false: [['agentDiff.review', 'agentDiff.toggleMode'], 'review'] };
+const MODE_LEGEND = { true: [['agentDiff.toggleMode'], 'edit'], false: [['agentDiff.toggleMode'], 'review'] };
 const RUNNABLE = new Set([...LEGEND, ...Object.values(MODE_LEGEND)].flatMap(([cmds]) => cmds));
 
 // Toast text for the current mode. Each key is a link that runs its command.
@@ -184,7 +183,7 @@ function legend() {
 }
 
 // The toast is a progress notification that never ends: VS Code hides other info toasts after 10 s.
-// Esc in review mode or "Cancel" closes it. The next mode switch or file opens it again.
+// Esc or "Cancel" closes it. The next mode switch or agent diff tab opens it again.
 let toastId = 0;
 let toastEnd;
 function closeToast() {
@@ -214,6 +213,14 @@ function setMode(r) {
   modeItem.text = r ? '$(eye) Review' : '$(edit) Edit';
   modeItem.tooltip = `Agent Diff: ${r ? 'review' : 'edit'} mode. Click or press ${keyOf('agentDiff.toggleMode', false)} to switch.`;
   if (ours) openToast();
+  syncNeovim();
+}
+
+// vscode-neovim sends the arrows of normal mode to Neovim before VS Code keybindings see them,
+// so nvim/agent-diff.lua maps them there and reads this flag. Without vscode-neovim the command fails quietly.
+function syncNeovim() {
+  const lua = `vim.g.agent_diff_reviewing = ${ours && review}`;
+  Promise.resolve(vscode.commands.executeCommand('vscode-neovim.lua', lua)).catch(() => {});
 }
 
 // agentDiff.inTab limits the keys and buttons to agent diff tabs, so other diffs keep the VS Code keys.
@@ -222,6 +229,7 @@ function syncTab() {
   Promise.resolve(vscode.commands.executeCommand('setContext', 'agentDiff.inTab', now)).catch(() => {});
   if (now === ours) return;
   ours = now;
+  syncNeovim();
   if (ours) {
     modeItem.show();
     openToast();
@@ -244,20 +252,12 @@ function activate(context) {
     vscode.commands.registerCommand('agentDiff.prev', () => show(current() - 1)),
     vscode.commands.registerCommand('agentDiff.dismiss', dismiss),
     vscode.commands.registerCommand('agentDiff.dismissAll', dismissAll),
-    vscode.commands.registerCommand('agentDiff.review', () => setMode(true)),
-    vscode.commands.registerCommand('agentDiff.edit', () => setMode(false)),
     vscode.commands.registerCommand('agentDiff.toggleMode', () => setMode(!review)),
     // Toast links: a click moves focus to the toast, so put it back for the plain keys.
     vscode.commands.registerCommand('agentDiff.run', async (cmd) => {
       if (!RUNNABLE.has(cmd)) return;
       await vscode.commands.executeCommand(cmd);
       await vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
-    }),
-    vscode.window.onDidChangeTextEditorSelection((e) => {
-      if (review && e.kind === vscode.TextEditorSelectionChangeKind.Mouse && inOurFile(e.textEditor.document)) setMode(false);
-    }),
-    vscode.workspace.onDidChangeTextDocument((e) => {
-      if (review && e.contentChanges.length && inOurFile(e.document)) setMode(false);
     }),
     vscode.window.tabGroups.onDidChangeTabs(syncTab),
     vscode.window.tabGroups.onDidChangeTabGroups(syncTab),
