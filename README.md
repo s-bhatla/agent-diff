@@ -12,7 +12,7 @@ The script installs each part and skips a tool that you do not have:
 
 1. `bin/agent-diff` to `~/.local/bin/`
 2. The VS Code extension, packaged with `npx @vscode/vsce`
-3. `nvim/agent-diff.lua` to `~/.config/nvim/plugin/`, for the [vscode-neovim](https://github.com/vscode-neovim/vscode-neovim) extension. Neovim outside VS Code does not use it.
+3. `nvim/agent-diff.lua` to `~/.local/share/nvim/site/plugin/`, for the [vscode-neovim](https://github.com/vscode-neovim/vscode-neovim) extension. Neovim loads it at startup, with or without a config, and LazyVim too. Neovim outside VS Code does not use it. The step runs if `nvim` or vscode-neovim is installed.
 4. `omp/agent-diff.ts` to `~/.omp/agent/extensions/`
 5. The hooks from `claude/hooks.json` into `~/.claude/settings.json`. The old file goes to `settings.json.bak`.
 

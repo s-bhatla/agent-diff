@@ -17,14 +17,15 @@ else
 fi
 
 # vscode-neovim sends the arrows of normal mode to Neovim, so the review keys need a Neovim mapping too.
-# Neovim runs each plugin/*.lua file of its config folder at startup.
-nvim_dir="${XDG_CONFIG_HOME:-$HOME/.config}/${NVIM_APPNAME:-nvim}"
-echo "3/5 Neovim mappings for vscode-neovim: $nvim_dir/plugin/agent-diff.lua"
-if [ -d "$nvim_dir" ]; then
-  mkdir -p "$nvim_dir/plugin"
-  cp nvim/agent-diff.lua "$nvim_dir/plugin/"
+# Neovim runs each plugin/*.lua file of its site folder at startup, and lazy.nvim keeps that folder.
+# The site folder leaves the Neovim config folder alone, so you can still clone a config into it later.
+nvim_site="${XDG_DATA_HOME:-$HOME/.local/share}/${NVIM_APPNAME:-nvim}/site/plugin"
+echo "3/5 Neovim mappings for vscode-neovim: $nvim_site/agent-diff.lua"
+if command -v nvim >/dev/null || { command -v code >/dev/null && code --list-extensions | grep -qix 'asvetliakov.vscode-neovim'; }; then
+  mkdir -p "$nvim_site"
+  cp nvim/agent-diff.lua "$nvim_site/"
 else
-  echo "    skipped: $nvim_dir not found"
+  echo "    skipped: neither nvim nor vscode-neovim found"
 fi
 
 echo "4/5 omp extension"
