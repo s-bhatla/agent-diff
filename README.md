@@ -21,14 +21,25 @@ You can run it again. It does not add the hooks twice. Reload your VS Code windo
 
 These keys and buttons work only in an agent diff tab. Other tabs keep the normal VS Code keys.
 
-The status bar at the bottom of the window also shows all six buttons, ↑ ↓ ← → ✓ ✓✓, while an agent diff tab is active. Hover over a button to see its key.
+An agent diff tab has two modes:
 
-| Action | Button | Key (macOS) | Key (Linux, Windows) |
-|---|---|---|---|
-| Previous / next change in the file | VS Code built-in ↑ ↓ (title bar), ↑ ↓ (status bar) | `cmd+alt+up` / `cmd+alt+down` | `ctrl+alt+up` / `ctrl+alt+down` |
-| Previous / next file | ← → | `cmd+alt+left` / `cmd+alt+right` | `ctrl+alt+left` / `ctrl+alt+right` |
-| Dismiss this file | ✓ | `cmd+alt+backspace` | `ctrl+alt+backspace` |
-| Dismiss all files | ✓✓ | `cmd+alt+shift+backspace` | `ctrl+alt+shift+backspace` |
+- **Review**: each file opens in this mode. The plain keys in the table move through the changes and files.
+- **Edit**: the editor works as usual. Only the `cmd+alt` keys work.
+
+A click in the file, Enter, or typing switches to edit mode. Esc switches back to review mode.
+To switch either way, press `cmd+alt+enter` (`ctrl+alt+enter`), or click the Review / Edit button in the status bar.
+
+A notification at the bottom right shows the keys for the current mode. Click a key in it to run that action.
+Esc in review mode or "Cancel" hides the notification. The next mode switch or file shows it again.
+
+| Action | Title bar button | Review mode | Edit mode (macOS) | Edit mode (Linux, Windows) |
+|---|---|---|---|---|
+| Previous / next change in the file | VS Code built-in ↑ ↓ | `up` / `down` | `cmd+alt+up` / `cmd+alt+down` | `ctrl+alt+up` / `ctrl+alt+down` |
+| Previous / next file | ← → | `left` / `right` | `cmd+alt+left` / `cmd+alt+right` | `ctrl+alt+left` / `ctrl+alt+right` |
+| Dismiss this file | ✓ | `backspace` | `cmd+alt+backspace` | `ctrl+alt+backspace` |
+| Dismiss all files | ✓✓ | `shift+backspace` | `cmd+alt+shift+backspace` | `ctrl+alt+shift+backspace` |
+
+The `cmd+alt` keys also work in review mode.
 
 Dismiss closes the tab and removes the file from the review. The change of the agent stays in the file.
 

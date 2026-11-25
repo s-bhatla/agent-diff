@@ -80,6 +80,7 @@ async function show(i) {
   if (!files.length) return finish();
   pos = (i + files.length) % files.length; // wrap around at both ends
   const f = files[pos];
+  setMode(true); // each file opens in review mode
   await vscode.commands.executeCommand('vscode.diff', f.left, f.right, `${f.name} (agent ${pos + 1}/${files.length})`, {
     preview: true, // reuse one tab
   });
@@ -136,20 +137,23 @@ async function finish() {
   await Promise.resolve(vscode.commands.executeCommand('setContext', 'agentDiff.active', false)).catch(() => {});
 }
 
-// Status bar buttons for agent diff tabs. Each tooltip shows the key from package.json.
-const BUTTONS = [
-  ['workbench.action.compareEditor.previousChange', '$(arrow-up)', 'Previous Change'],
-  ['workbench.action.compareEditor.nextChange', '$(arrow-down)', 'Next Change'],
-  ['agentDiff.prev', '$(arrow-left)', 'Previous Changed File'],
-  ['agentDiff.next', '$(arrow-right)', 'Next Changed File'],
-  ['agentDiff.dismiss', '$(check)', 'Dismiss This File'],
-  ['agentDiff.dismissAll', '$(check-all)', 'Dismiss All Files'],
-];
-let bar = [];
+// Review mode: the plain keys in package.json review the diff. Edit mode: the editor works as usual.
+// A click or typing in the file switches to edit mode.
+let review = true;
+let ours = false; // the active tab is an agent diff
+let keys = []; // contributes.keybindings of package.json
+let modeItem;
+
+const isOurs = (t) => !!t && t.input instanceof vscode.TabInputTextDiff && t.input.original.scheme === SCHEME;
+const activeTab = () => vscode.window.tabGroups.activeTabGroup.activeTab;
+const inOurFile = (doc) => {
+  const t = activeTab();
+  return isOurs(t) && t.input.modified.toString() === doc.uri.toString();
+};
 
 // "cmd+alt+left" -> "⌥⌘←" on macOS, "ctrl+alt+left" -> "Ctrl+Alt+Left" elsewhere, in the VS Code modifier order.
 const MODS = ['ctrl', 'shift', 'alt', 'cmd'];
-const MAC = { ctrl: '⌃', shift: '⇧', alt: '⌥', cmd: '⌘', up: '↑', down: '↓', left: '←', right: '→', backspace: '⌫' };
+const MAC = { ctrl: '⌃', shift: '⇧', alt: '⌥', cmd: '⌘', up: '↑', down: '↓', left: '←', right: '→', backspace: '⌫', enter: '⏎', escape: 'Esc' };
 function keyLabel(kb) {
   const mac = process.platform === 'darwin';
   const rank = (p) => (MODS.includes(p) ? MODS.indexOf(p) : MODS.length);
@@ -157,31 +161,104 @@ function keyLabel(kb) {
   return mac ? parts.map((p) => MAC[p] ?? p.toUpperCase()).join('') : parts.map((p) => p[0].toUpperCase() + p.slice(1)).join('+');
 }
 
+// The key of a command in review mode (the bindings that need agentDiff.review) or in edit mode (the others).
+function keyOf(command, rev) {
+  const kb = keys.find((k) => k.command === command && /(^|[^!])agentDiff\.review\b/.test(k.when) === rev);
+  return kb ? keyLabel(kb) : '';
+}
+
+const LEGEND = [
+  [['workbench.action.compareEditor.previousChange', 'workbench.action.compareEditor.nextChange'], 'change'],
+  [['agentDiff.prev', 'agentDiff.next'], 'file'],
+  [['agentDiff.dismiss'], 'dismiss'],
+  [['agentDiff.dismissAll'], 'all'],
+];
+const MODE_LEGEND = { true: [['agentDiff.edit'], 'edit'], false: [['agentDiff.review', 'agentDiff.toggleMode'], 'review'] };
+const RUNNABLE = new Set([...LEGEND, ...Object.values(MODE_LEGEND)].flatMap(([cmds]) => cmds));
+
+// Toast text for the current mode. Each key is a link that runs its command.
+function legend() {
+  const link = (cmd) => `[${keyOf(cmd, review)}](command:agentDiff.run?${encodeURIComponent(JSON.stringify([cmd]))})`;
+  const groups = [...LEGEND, MODE_LEGEND[review]].map(([cmds, word]) => `${cmds.map(link).join(' / ')} ${word}`);
+  return `${review ? 'Review' : 'Edit'}: ${groups.join(' · ')}`;
+}
+
+// The toast is a progress notification that never ends: VS Code hides other info toasts after 10 s.
+// Esc in review mode or "Cancel" closes it. The next mode switch or file opens it again.
+let toastId = 0;
+let toastEnd;
+function closeToast() {
+  toastId++;
+  toastEnd?.();
+  toastEnd = undefined;
+}
+function openToast() {
+  closeToast();
+  const id = toastId;
+  const task = (_progress, token) =>
+    new Promise((done) => {
+      if (id !== toastId) return done(); // replaced before VS Code started it
+      toastEnd = done;
+      token.onCancellationRequested(() => {
+        if (id === toastId) toastEnd = undefined;
+        done();
+      });
+    });
+  const opts = { location: vscode.ProgressLocation.Notification, title: legend(), cancellable: true };
+  Promise.resolve(vscode.window.withProgress(opts, task)).catch(() => {});
+}
+
+function setMode(r) {
+  review = r;
+  Promise.resolve(vscode.commands.executeCommand('setContext', 'agentDiff.review', r)).catch(() => {});
+  modeItem.text = r ? '$(eye) Review' : '$(edit) Edit';
+  modeItem.tooltip = `Agent Diff: ${r ? 'review' : 'edit'} mode. Click or press ${keyOf('agentDiff.toggleMode', false)} to switch.`;
+  if (ours) openToast();
+}
+
 // agentDiff.inTab limits the keys and buttons to agent diff tabs, so other diffs keep the VS Code keys.
 function syncTab() {
-  const t = vscode.window.tabGroups.activeTabGroup.activeTab;
-  const ours = !!t && t.input instanceof vscode.TabInputTextDiff && t.input.original.scheme === SCHEME;
-  Promise.resolve(vscode.commands.executeCommand('setContext', 'agentDiff.inTab', ours)).catch(() => {});
-  for (const b of bar) ours ? b.show() : b.hide();
+  const now = isOurs(activeTab());
+  Promise.resolve(vscode.commands.executeCommand('setContext', 'agentDiff.inTab', now)).catch(() => {});
+  if (now === ours) return;
+  ours = now;
+  if (ours) {
+    modeItem.show();
+    openToast();
+  } else {
+    modeItem.hide();
+    closeToast();
+  }
 }
 
 function activate(context) {
   ctx = context;
-  const keys = context.extension.packageJSON.contributes.keybindings;
-  bar = BUTTONS.map(([command, text, title], i) => {
-    // Left side: a higher priority sits further left, so the buttons keep the list order.
-    const b = vscode.window.createStatusBarItem(`agentDiff.bar.${i}`, vscode.StatusBarAlignment.Left, 1000 - i);
-    const kb = keys.find((k) => k.command === command);
-    Object.assign(b, { command, text, name: `Agent Diff: ${title}`, tooltip: kb ? `${title} (${keyLabel(kb)})` : title });
-    return b;
-  });
-  context.subscriptions.push(...bar);
+  keys = context.extension.packageJSON.contributes.keybindings;
+  modeItem = vscode.window.createStatusBarItem('agentDiff.mode', vscode.StatusBarAlignment.Left, 1000);
+  Object.assign(modeItem, { name: 'Agent Diff Mode', command: 'agentDiff.toggleMode' });
+  setMode(true);
   context.subscriptions.push(
+    modeItem,
     vscode.workspace.registerTextDocumentContentProvider(SCHEME, { provideTextDocumentContent: oldContent }),
     vscode.commands.registerCommand('agentDiff.next', () => show(current() + 1)),
     vscode.commands.registerCommand('agentDiff.prev', () => show(current() - 1)),
     vscode.commands.registerCommand('agentDiff.dismiss', dismiss),
     vscode.commands.registerCommand('agentDiff.dismissAll', dismissAll),
+    vscode.commands.registerCommand('agentDiff.review', () => setMode(true)),
+    vscode.commands.registerCommand('agentDiff.edit', () => setMode(false)),
+    vscode.commands.registerCommand('agentDiff.toggleMode', () => setMode(!review)),
+    // Toast links: a click moves focus to the toast, so put it back for the plain keys.
+    vscode.commands.registerCommand('agentDiff.run', async (cmd) => {
+      if (!RUNNABLE.has(cmd)) return;
+      await vscode.commands.executeCommand(cmd);
+      await vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
+    }),
+    vscode.window.onDidChangeTextEditorSelection((e) => {
+      if (review && e.kind === vscode.TextEditorSelectionChangeKind.Mouse && inOurFile(e.textEditor.document)) setMode(false);
+    }),
+    vscode.workspace.onDidChangeTextDocument((e) => {
+      if (review && e.contentChanges.length && inOurFile(e.document)) setMode(false);
+    }),
     vscode.window.tabGroups.onDidChangeTabs(syncTab),
     vscode.window.tabGroups.onDidChangeTabGroups(syncTab),
   );

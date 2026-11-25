@@ -3,7 +3,7 @@
   "displayName": "Agent Diff",
   "description": "Shows each file an agent changed as an inline diff.",
   "publisher": "local",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
@@ -40,6 +40,21 @@
         "title": "Dismiss All Files",
         "category": "Agent Diff",
         "icon": "$(check-all)"
+      },
+      {
+        "command": "agentDiff.toggleMode",
+        "title": "Switch Review / Edit Mode",
+        "category": "Agent Diff"
+      },
+      {
+        "command": "agentDiff.review",
+        "title": "Review Mode",
+        "category": "Agent Diff"
+      },
+      {
+        "command": "agentDiff.edit",
+        "title": "Edit Mode",
+        "category": "Agent Diff"
       }
     ],
     "menus": {
@@ -81,6 +96,18 @@
         {
           "command": "agentDiff.dismissAll",
           "when": "agentDiff.active"
+        },
+        {
+          "command": "agentDiff.toggleMode",
+          "when": "agentDiff.inTab"
+        },
+        {
+          "command": "agentDiff.review",
+          "when": "agentDiff.inTab && !agentDiff.review"
+        },
+        {
+          "command": "agentDiff.edit",
+          "when": "agentDiff.inTab && agentDiff.review"
         }
       ]
     },
@@ -120,6 +147,52 @@
         "key": "ctrl+alt+shift+backspace",
         "mac": "cmd+alt+shift+backspace",
         "when": "agentDiff.inTab"
+      },
+      {
+        "command": "agentDiff.toggleMode",
+        "key": "ctrl+alt+enter",
+        "mac": "cmd+alt+enter",
+        "when": "agentDiff.inTab && editorFocus && !findWidgetVisible"
+      },
+      {
+        "command": "workbench.action.compareEditor.previousChange",
+        "key": "up",
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+      },
+      {
+        "command": "workbench.action.compareEditor.nextChange",
+        "key": "down",
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+      },
+      {
+        "command": "agentDiff.prev",
+        "key": "left",
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+      },
+      {
+        "command": "agentDiff.next",
+        "key": "right",
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+      },
+      {
+        "command": "agentDiff.dismiss",
+        "key": "backspace",
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+      },
+      {
+        "command": "agentDiff.dismissAll",
+        "key": "shift+backspace",
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+      },
+      {
+        "command": "agentDiff.edit",
+        "key": "enter",
+        "when": "agentDiff.inTab && agentDiff.review && editorTextFocus"
+      },
+      {
+        "command": "agentDiff.review",
+        "key": "escape",
+        "when": "agentDiff.inTab && !agentDiff.review && editorTextFocus && !suggestWidgetVisible && !findWidgetVisible && !hasMultipleSelections && !inSnippetMode && !parameterHintsVisible && !inlineSuggestionVisible"
       }
     ]
   }
