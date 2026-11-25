@@ -20,7 +20,7 @@ You can run it again. It does not add the hooks twice. Reload your VS Code windo
 
 ## Use
 
-These keys and buttons work only in an agent diff tab. Other tabs keep the normal VS Code keys.
+These keys work only in an agent diff tab. Other tabs keep the normal VS Code keys.
 
 An agent diff tab has two modes:
 
@@ -34,18 +34,20 @@ With vscode-neovim, the plain keys work in normal mode. Neovim gets these keys b
 A notification at the bottom right shows the keys for the current mode. Click a key in it to run that action.
 Esc or "Cancel" hides the notification. The next mode switch or agent diff tab shows it again.
 
-| Action | Title bar button | Review mode | Edit mode (macOS) | Edit mode (Linux, Windows) |
-|---|---|---|---|---|
-| Previous / next change in the file | VS Code built-in ↑ ↓ | `up` / `down` | `cmd+alt+up` / `cmd+alt+down` | `ctrl+alt+up` / `ctrl+alt+down` |
-| Previous / next file | ← → | `left` / `right` | `cmd+alt+left` / `cmd+alt+right` | `ctrl+alt+left` / `ctrl+alt+right` |
-| Dismiss this file | ✓ | `backspace` | `cmd+alt+backspace` | `ctrl+alt+backspace` |
-| Dismiss all files | ✓✓ | `shift+backspace` | `cmd+alt+shift+backspace` | `ctrl+alt+shift+backspace` |
+| Action | Review mode | Edit mode (macOS) | Edit mode (Linux, Windows) |
+|---|---|---|---|
+| Previous / next change in the file | `up` / `down` | `cmd+alt+up` / `cmd+alt+down` | `ctrl+alt+up` / `ctrl+alt+down` |
+| Previous / next file | `left` / `right` | `cmd+alt+left` / `cmd+alt+right` | `ctrl+alt+left` / `ctrl+alt+right` |
+| Dismiss this file | `backspace` | `cmd+alt+backspace` | `ctrl+alt+backspace` |
+| Dismiss all files | `shift+backspace` | `cmd+alt+shift+backspace` | `ctrl+alt+shift+backspace` |
 
 The `cmd+alt` keys also work in review mode.
 
 Dismiss closes the tab and removes the file from the review. The change of the agent stays in the file.
 
-The commands are also in the command palette under "Agent Diff". Use the keys in Zen mode if the editor title bar is hidden.
+The commands are also in the command palette under "Agent Diff".
+
+The extension adds no editor title bar buttons. The ↑ ↓ there belong to VS Code and show in every diff. To hide them, right-click one and choose "Hide". That hides them in all diff editors.
 
 ## How it works
 

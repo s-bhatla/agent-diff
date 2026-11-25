@@ -3,7 +3,7 @@
   "displayName": "Agent Diff",
   "description": "Shows each file an agent changed as an inline diff.",
   "publisher": "local",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
@@ -20,26 +20,22 @@
       {
         "command": "agentDiff.prev",
         "title": "Previous Changed File",
-        "category": "Agent Diff",
-        "icon": "$(arrow-left)"
+        "category": "Agent Diff"
       },
       {
         "command": "agentDiff.next",
         "title": "Next Changed File",
-        "category": "Agent Diff",
-        "icon": "$(arrow-right)"
+        "category": "Agent Diff"
       },
       {
         "command": "agentDiff.dismiss",
         "title": "Dismiss This File",
-        "category": "Agent Diff",
-        "icon": "$(check)"
+        "category": "Agent Diff"
       },
       {
         "command": "agentDiff.dismissAll",
         "title": "Dismiss All Files",
-        "category": "Agent Diff",
-        "icon": "$(check-all)"
+        "category": "Agent Diff"
       },
       {
         "command": "agentDiff.toggleMode",
@@ -48,28 +44,6 @@
       }
     ],
     "menus": {
-      "editor/title": [
-        {
-          "command": "agentDiff.prev",
-          "when": "agentDiff.inTab",
-          "group": "navigation@91"
-        },
-        {
-          "command": "agentDiff.next",
-          "when": "agentDiff.inTab",
-          "group": "navigation@92"
-        },
-        {
-          "command": "agentDiff.dismiss",
-          "when": "agentDiff.inTab",
-          "group": "navigation@93"
-        },
-        {
-          "command": "agentDiff.dismissAll",
-          "when": "agentDiff.inTab",
-          "group": "navigation@94"
-        }
-      ],
       "commandPalette": [
         {
           "command": "agentDiff.prev",
