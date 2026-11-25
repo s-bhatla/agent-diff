@@ -136,15 +136,46 @@ async function finish() {
   await Promise.resolve(vscode.commands.executeCommand('setContext', 'agentDiff.active', false)).catch(() => {});
 }
 
+// Status bar buttons for agent diff tabs. Each tooltip shows the key from package.json.
+const BUTTONS = [
+  ['workbench.action.compareEditor.previousChange', '$(arrow-up)', 'Previous Change'],
+  ['workbench.action.compareEditor.nextChange', '$(arrow-down)', 'Next Change'],
+  ['agentDiff.prev', '$(arrow-left)', 'Previous Changed File'],
+  ['agentDiff.next', '$(arrow-right)', 'Next Changed File'],
+  ['agentDiff.dismiss', '$(check)', 'Dismiss This File'],
+  ['agentDiff.dismissAll', '$(check-all)', 'Dismiss All Files'],
+];
+let bar = [];
+
+// "cmd+alt+left" -> "⌥⌘←" on macOS, "ctrl+alt+left" -> "Ctrl+Alt+Left" elsewhere, in the VS Code modifier order.
+const MODS = ['ctrl', 'shift', 'alt', 'cmd'];
+const MAC = { ctrl: '⌃', shift: '⇧', alt: '⌥', cmd: '⌘', up: '↑', down: '↓', left: '←', right: '→', backspace: '⌫' };
+function keyLabel(kb) {
+  const mac = process.platform === 'darwin';
+  const rank = (p) => (MODS.includes(p) ? MODS.indexOf(p) : MODS.length);
+  const parts = ((mac && kb.mac) || kb.key).split('+').sort((a, b) => rank(a) - rank(b));
+  return mac ? parts.map((p) => MAC[p] ?? p.toUpperCase()).join('') : parts.map((p) => p[0].toUpperCase() + p.slice(1)).join('+');
+}
+
 // agentDiff.inTab limits the keys and buttons to agent diff tabs, so other diffs keep the VS Code keys.
 function syncTab() {
   const t = vscode.window.tabGroups.activeTabGroup.activeTab;
   const ours = !!t && t.input instanceof vscode.TabInputTextDiff && t.input.original.scheme === SCHEME;
   Promise.resolve(vscode.commands.executeCommand('setContext', 'agentDiff.inTab', ours)).catch(() => {});
+  for (const b of bar) ours ? b.show() : b.hide();
 }
 
 function activate(context) {
   ctx = context;
+  const keys = context.extension.packageJSON.contributes.keybindings;
+  bar = BUTTONS.map(([command, text, title], i) => {
+    // Left side: a higher priority sits further left, so the buttons keep the list order.
+    const b = vscode.window.createStatusBarItem(`agentDiff.bar.${i}`, vscode.StatusBarAlignment.Left, 1000 - i);
+    const kb = keys.find((k) => k.command === command);
+    Object.assign(b, { command, text, name: `Agent Diff: ${title}`, tooltip: kb ? `${title} (${keyLabel(kb)})` : title });
+    return b;
+  });
+  context.subscriptions.push(...bar);
   context.subscriptions.push(
     vscode.workspace.registerTextDocumentContentProvider(SCHEME, { provideTextDocumentContent: oldContent }),
     vscode.commands.registerCommand('agentDiff.next', () => show(current() + 1)),

@@ -19,11 +19,13 @@ You can run it again. It does not add the hooks twice. Reload your VS Code windo
 
 ## Use
 
-These keys work only in an agent diff tab. Other tabs keep the normal VS Code keys.
+These keys and buttons work only in an agent diff tab. Other tabs keep the normal VS Code keys.
+
+The status bar at the bottom of the window also shows all six buttons, ↑ ↓ ← → ✓ ✓✓, while an agent diff tab is active. Hover over a button to see its key.
 
 | Action | Button | Key (macOS) | Key (Linux, Windows) |
 |---|---|---|---|
-| Previous / next change in the file | VS Code built-in ↑ ↓ | `cmd+alt+up` / `cmd+alt+down` | `ctrl+alt+up` / `ctrl+alt+down` |
+| Previous / next change in the file | VS Code built-in ↑ ↓ (title bar), ↑ ↓ (status bar) | `cmd+alt+up` / `cmd+alt+down` | `ctrl+alt+up` / `ctrl+alt+down` |
 | Previous / next file | ← → | `cmd+alt+left` / `cmd+alt+right` | `ctrl+alt+left` / `ctrl+alt+right` |
 | Dismiss this file | ✓ | `cmd+alt+backspace` | `ctrl+alt+backspace` |
 | Dismiss all files | ✓✓ | `cmd+alt+shift+backspace` | `ctrl+alt+shift+backspace` |
