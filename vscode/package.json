@@ -3,7 +3,7 @@
   "displayName": "Agent Diff",
   "description": "Shows each file an agent changed as an inline diff.",
   "publisher": "local",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
